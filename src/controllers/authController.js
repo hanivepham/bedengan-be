@@ -1,10 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/db');
+const AdminModel = require('../models/AdminModel');
 const { successResponse, errorResponse } = require('../utils/responseHelper');
+const { isEmpty, validateEmail, validateLength } = require('../utils/validator');
 
 /**
  * Controller untuk Autentikasi Admin
+ * Akses database sepenuhnya melalui Data Access Layer (AdminModel)
  */
 const authController = {
   // POST /api/auth/login
@@ -12,22 +14,22 @@ const authController = {
     try {
       const { email, password } = req.body;
 
-      if (!email || !password) {
+      if (isEmpty(email) || isEmpty(password)) {
         return errorResponse(res, 'Email dan password wajib diisi!', 400);
       }
 
-      const [rows] = await pool.query(
-        'SELECT id, name, email, password_hash, created_at FROM admins WHERE email = ?',
-        [email.trim().toLowerCase()]
-      );
+      const emailVal = validateEmail(email);
+      if (!emailVal.isValid) {
+        return errorResponse(res, emailVal.error, 400);
+      }
 
-      if (rows.length === 0) {
+      const admin = await AdminModel.findByEmail(emailVal.sanitized);
+
+      if (!admin) {
         return errorResponse(res, 'Kredensial tidak valid. Email tidak terdaftar.', 401);
       }
 
-      const admin = rows[0];
       const isMatch = await bcrypt.compare(password, admin.password_hash);
-
       if (!isMatch) {
         return errorResponse(res, 'Kredensial tidak valid. Password salah.', 401);
       }
@@ -71,21 +73,23 @@ const authController = {
       const adminId = req.admin.id;
       const { name, current_password, new_password } = req.body;
 
-      const [rows] = await pool.query('SELECT * FROM admins WHERE id = ?', [adminId]);
-      if (rows.length === 0) {
+      const admin = await AdminModel.findFullById(adminId);
+      if (!admin) {
         return errorResponse(res, 'Admin tidak ditemukan.', 404);
       }
 
-      const admin = rows[0];
-
       let updatedName = admin.name;
-      if (name && name.trim()) {
+      if (!isEmpty(name)) {
+        const lengthCheck = validateLength(name.trim(), 100, 'Nama');
+        if (!lengthCheck.isValid) {
+          return errorResponse(res, lengthCheck.error, 400);
+        }
         updatedName = name.trim();
       }
 
       let passwordHash = admin.password_hash;
-      if (new_password) {
-        if (!current_password) {
+      if (!isEmpty(new_password)) {
+        if (isEmpty(current_password)) {
           return errorResponse(res, 'Password saat ini wajib diisi untuk mengganti password baru.', 400);
         }
 
@@ -94,26 +98,27 @@ const authController = {
           return errorResponse(res, 'Password saat ini tidak sesuai!', 400);
         }
 
-        if (new_password.length < 6) {
+        if (String(new_password).length < 6) {
           return errorResponse(res, 'Password baru minimal 6 karakter!', 400);
         }
 
-        passwordHash = await bcrypt.hash(new_password, 10);
+        passwordHash = await bcrypt.hash(String(new_password), 10);
       }
 
-      await pool.query(
-        'UPDATE admins SET name = ?, password_hash = ? WHERE id = ?',
-        [updatedName, passwordHash, adminId]
-      );
+      const updatedAdmin = await AdminModel.updateProfile(adminId, {
+        name: updatedName,
+        passwordHash
+      });
 
       return successResponse(res, 'Profil berhasil diperbarui.', {
         admin: {
-          id: admin.id,
-          name: updatedName,
-          email: admin.email
+          id: updatedAdmin.id,
+          name: updatedAdmin.name,
+          email: updatedAdmin.email
         }
       });
     } catch (error) {
+      console.error('[Update Profile Error]', error);
       return errorResponse(res, 'Gagal memperbarui profil.', 500, error.message);
     }
   }

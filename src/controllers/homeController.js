@@ -1,35 +1,38 @@
-const pool = require('../config/db');
+const ConfigModel = require('../models/ConfigModel');
+const GroundModel = require('../models/GroundModel');
+const CatalogModel = require('../models/CatalogModel');
+const ReviewModel = require('../models/ReviewModel');
 const { successResponse, errorResponse, formatImageUrl } = require('../utils/responseHelper');
+const { isEmpty, validateLength } = require('../utils/validator');
 
 /**
- * Controller untuk Beranda Aplikasi, Ringkasan Statistik, Ulasan Pengunjung, dan Konfigurasi Situs
+ * Controller untuk Halaman Beranda, Dashboard Statistik, Ulasan Pengunjung, & Pengaturan Situs
+ * Akses database melalui Data Access Layer (ConfigModel, GroundModel, CatalogModel, ReviewModel)
  */
 const homeController = {
   // GET /api/home (Public)
   getHomeData: async (req, res) => {
     try {
       // 1. Ambil site_configs
-      const [configRows] = await pool.query('SELECT config_key, config_value FROM site_configs');
+      const rawConfigs = await ConfigModel.getAll();
       const configs = {};
-      configRows.forEach((row) => {
-        let val = row.config_value;
-        if (row.config_key.includes('map_url') || row.config_key.includes('image')) {
-          val = formatImageUrl(req, val);
+      Object.entries(rawConfigs).forEach(([key, val]) => {
+        let formattedVal = val;
+        if (key.includes('map_url') || key.includes('image')) {
+          formattedVal = formatImageUrl(req, val);
         }
-        configs[row.config_key] = val;
+        configs[key] = formattedVal;
       });
 
       // 2. Ringkasan Statistik
-      const [groundsCount] = await pool.query('SELECT COUNT(*) as count FROM grounds WHERE is_active = TRUE');
-      const [catalogsRental] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'rental' AND status = 'approved'");
-      const [catalogsWarung] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'warung' AND status = 'approved'");
-      const [catalogsPhoto] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'photographer' AND status = 'approved'");
-      const [pendingCount] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE status = 'pending'");
+      const totalGrounds = await GroundModel.countActive();
+      const totalRentals = await CatalogModel.countByCategoryAndStatus('rental', 'approved');
+      const totalWarungs = await CatalogModel.countByCategoryAndStatus('warung', 'approved');
+      const totalPhotographers = await CatalogModel.countByCategoryAndStatus('photographer', 'approved');
+      const totalPending = await CatalogModel.countPending();
 
       // 3. Ulasan Pengunjung
-      const [reviews] = await pool.query(
-        'SELECT id, visitor_name, rating, comment, visit_date, created_at FROM reviews WHERE is_published = TRUE ORDER BY id DESC LIMIT 10'
-      );
+      const reviews = await ReviewModel.findPublished(10);
 
       return successResponse(res, 'Data beranda berhasil diambil.', {
         about_bedengan: configs.about_bedengan || 'Bumi Perkemahan Bedengan, Dau, Kabupaten Malang.',
@@ -43,11 +46,11 @@ const homeController = {
           park_fee: configs.park_fee || 'Motor: Rp 5.000 | Mobil: Rp 10.000'
         },
         summary: {
-          total_grounds: groundsCount[0].count,
-          total_rentals: catalogsRental[0].count,
-          total_warungs: catalogsWarung[0].count,
-          total_photographers: catalogsPhoto[0].count,
-          pending_applications: pendingCount[0].count
+          total_grounds: totalGrounds,
+          total_rentals: totalRentals,
+          total_warungs: totalWarungs,
+          total_photographers: totalPhotographers,
+          pending_applications: totalPending
         },
         reviews,
         configs
@@ -61,23 +64,19 @@ const homeController = {
   // GET /api/home/dashboard (Protected - data lengkap untuk Next.js Admin Panel)
   getDashboardStats: async (req, res) => {
     try {
-      const [groundsCount] = await pool.query('SELECT COUNT(*) as count FROM grounds');
-      const [catalogsRental] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'rental' AND status = 'approved'");
-      const [catalogsWarung] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'warung' AND status = 'approved'");
-      const [catalogsPhoto] = await pool.query("SELECT COUNT(*) as count FROM catalogs WHERE category = 'photographer' AND status = 'approved'");
-      const [pendingRows] = await pool.query(
-        "SELECT id, name, category, applicant_name, created_at, status FROM catalogs WHERE status = 'pending' ORDER BY created_at DESC"
-      );
+      const totalGrounds = await GroundModel.countAll();
+      const totalRentals = await CatalogModel.countByCategoryAndStatus('rental', 'approved');
+      const totalWarungs = await CatalogModel.countByCategoryAndStatus('warung', 'approved');
+      const totalPhotographers = await CatalogModel.countByCategoryAndStatus('photographer', 'approved');
 
-      const [recentActivities] = await pool.query(
-        'SELECT id, name, category, created_at as timestamp FROM catalogs ORDER BY created_at DESC LIMIT 5'
-      );
+      const pendingRows = await CatalogModel.findPending(10);
+      const recentActivities = await CatalogModel.findRecentActivities(5);
 
       return successResponse(res, 'Data statistik dashboard berhasil diambil.', {
-        total_warung: catalogsWarung[0].count,
-        total_rental: catalogsRental[0].count,
-        total_photographer: catalogsPhoto[0].count,
-        total_grounds: groundsCount[0].count,
+        total_warung: totalWarungs,
+        total_rental: totalRentals,
+        total_photographer: totalPhotographers,
+        total_grounds: totalGrounds,
         pending_count: pendingRows.length,
         pending_registrations: pendingRows,
         recent_activities: recentActivities
@@ -92,23 +91,26 @@ const homeController = {
     try {
       const { visitor_name, rating, comment, visit_date } = req.body;
 
-      if (!visitor_name || !rating || !comment) {
+      if (isEmpty(visitor_name) || isEmpty(rating) || isEmpty(comment)) {
         return errorResponse(res, 'Nama pengunjung, rating (1-5), dan komentar wajib diisi!', 400);
       }
+
+      const nameCheck = validateLength(visitor_name, 100, 'Nama pengunjung');
+      if (!nameCheck.isValid) return errorResponse(res, nameCheck.error, 400);
 
       const parsedRating = parseInt(rating, 10);
       if (isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
         return errorResponse(res, 'Rating harus berupa angka 1 sampai 5.', 400);
       }
 
-      const [result] = await pool.query(
-        'INSERT INTO reviews (visitor_name, rating, comment, visit_date, is_published) VALUES (?, ?, ?, ?, TRUE)',
-        [visitor_name.trim(), parsedRating, comment.trim(), visit_date || 'Hari ini']
-      );
+      const newReview = await ReviewModel.create({
+        visitor_name: String(visitor_name).trim(),
+        rating: parsedRating,
+        comment: String(comment).trim(),
+        visit_date: visit_date || 'Hari ini'
+      });
 
-      const [newReview] = await pool.query('SELECT * FROM reviews WHERE id = ?', [result.insertId]);
-
-      return successResponse(res, 'Terima kasih! Ulasan Anda berhasil dikirimkan.', newReview[0], 201);
+      return successResponse(res, 'Terima kasih! Ulasan Anda berhasil dikirimkan.', newReview, 201);
     } catch (error) {
       return errorResponse(res, 'Gagal menambahkan ulasan.', 500, error.message);
     }
@@ -119,12 +121,12 @@ const homeController = {
     try {
       const { id } = req.params;
 
-      const [existing] = await pool.query('SELECT id, visitor_name FROM reviews WHERE id = ?', [id]);
-      if (existing.length === 0) {
+      const existing = await ReviewModel.findById(id);
+      if (!existing) {
         return errorResponse(res, 'Ulasan tidak ditemukan.', 404);
       }
 
-      await pool.query('DELETE FROM reviews WHERE id = ?', [id]);
+      await ReviewModel.delete(id);
 
       return successResponse(res, 'Ulasan berhasil dihapus.');
     } catch (error) {
@@ -135,32 +137,24 @@ const homeController = {
   // PUT /api/home/configs (Protected)
   updateConfigs: async (req, res) => {
     try {
-      const updates = req.body; // e.g. { about_bedengan: "...", etiquette_title: "..." }
+      const updates = req.body;
 
-      if (!updates || typeof updates !== 'object') {
+      if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
         return errorResponse(res, 'Payload konfigurasi tidak valid.', 400);
       }
 
-      for (const [key, value] of Object.entries(updates)) {
-        await pool.query(
-          `INSERT INTO site_configs (config_key, config_value)
-           VALUES (?, ?)
-           ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)`,
-          [key, String(value)]
-        );
-      }
+      const updatedConfigs = await ConfigModel.upsertMany(updates);
 
-      const [configRows] = await pool.query('SELECT config_key, config_value FROM site_configs');
-      const configs = {};
-      configRows.forEach((row) => {
-        let val = row.config_value;
-        if (row.config_key.includes('map_url') || row.config_key.includes('image')) {
-          val = formatImageUrl(req, val);
+      const formattedConfigs = {};
+      Object.entries(updatedConfigs).forEach(([key, val]) => {
+        let formattedVal = val;
+        if (key.includes('map_url') || key.includes('image')) {
+          formattedVal = formatImageUrl(req, val);
         }
-        configs[row.config_key] = val;
+        formattedConfigs[key] = formattedVal;
       });
 
-      return successResponse(res, 'Konfigurasi situs berhasil diperbarui.', configs);
+      return successResponse(res, 'Konfigurasi situs berhasil diperbarui.', formattedConfigs);
     } catch (error) {
       console.error('[Config Error]', error);
       return errorResponse(res, 'Gagal memperbarui konfigurasi.', 500, error.message);
@@ -174,16 +168,11 @@ const homeController = {
         return errorResponse(res, 'File gambar peta wajib diunggah!', 400);
       }
 
-      const { map_type } = req.body; // 'overall' atau 'evacuation'
+      const { map_type } = req.body;
       const relativePath = `/uploads/maps/${req.file.filename}`;
       const configKey = map_type === 'evacuation' ? 'evacuation_map_url' : 'overall_ground_map_url';
 
-      await pool.query(
-        `INSERT INTO site_configs (config_key, config_value)
-         VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)`,
-        [configKey, relativePath]
-      );
+      await ConfigModel.upsert(configKey, relativePath);
 
       return successResponse(res, 'Gambar peta berhasil diperbarui.', {
         config_key: configKey,

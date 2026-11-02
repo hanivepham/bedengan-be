@@ -38,13 +38,17 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
-
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
   if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Format file tidak didukung. Hanya gambar dengan format .jpg, .jpeg, .png, atau .webp yang diperbolehkan!'), false);
+    cb(
+      new Error(
+        'Format file tidak didukung. Hanya gambar dengan format .jpg, .jpeg, .png, atau .webp yang diperbolehkan!'
+      ),
+      false
+    );
   }
 };
 
@@ -78,6 +82,7 @@ const handleUpload = (fieldName) => {
           message: err.message
         });
       }
+      // Jika tidak ada file diunggah atau unggah berhasil, lanjutkan ke controller
       next();
     });
   };

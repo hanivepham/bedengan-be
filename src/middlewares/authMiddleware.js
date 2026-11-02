@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
-const pool = require('../config/db');
+const AdminModel = require('../models/AdminModel');
 const { errorResponse } = require('../utils/responseHelper');
 
+/**
+ * Middleware untuk verifikasi token JWT admin
+ * Menggunakan AdminModel (DAL) tanpa query SQL langsung
+ */
 const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -23,16 +27,13 @@ const authMiddleware = async (req, res, next) => {
       return errorResponse(res, 'Sesi tidak valid atau token telah kedaluwarsa. Silakan login kembali.', 401);
     }
 
-    const [rows] = await pool.query(
-      'SELECT id, name, email, created_at FROM admins WHERE id = ?',
-      [decoded.id]
-    );
+    const admin = await AdminModel.findById(decoded.id);
 
-    if (rows.length === 0) {
+    if (!admin) {
       return errorResponse(res, 'Akun admin tidak ditemukan atau telah dinonaktifkan.', 401);
     }
 
-    req.admin = rows[0];
+    req.admin = admin;
     next();
   } catch (error) {
     return errorResponse(res, 'Terjadi kesalahan pada verifikasi autentikasi.', 500, error.message);
