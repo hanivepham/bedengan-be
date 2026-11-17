@@ -57,6 +57,7 @@ app.get('/', (req, res) => {
 // Registrasi Route Endpoints
 app.use('/api/auth', authRoutes);
 app.use('/api/grounds', groundRoutes);
+app.use('/grounds', groundRoutes);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/api/guides', guideRoutes);
 app.use('/api/home', homeRoutes);

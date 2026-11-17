@@ -5,12 +5,27 @@ const pool = require('../config/db');
  */
 const GroundModel = {
   findAll: async () => {
-    const [rows] = await pool.query('SELECT * FROM grounds ORDER BY code ASC');
+    const [rows] = await pool.query(
+      `SELECT 
+        g.*, 
+        COALESCE(ci.file_url, g.image_url) AS image_url
+       FROM grounds g
+       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       ORDER BY g.code ASC`
+    );
     return rows;
   },
 
   findById: async (id) => {
-    const [rows] = await pool.query('SELECT * FROM grounds WHERE id = ?', [id]);
+    const [rows] = await pool.query(
+      `SELECT 
+        g.*, 
+        COALESCE(ci.file_url, g.image_url) AS image_url
+       FROM grounds g
+       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       WHERE g.id = ?`,
+      [id]
+    );
     return rows[0] || null;
   },
 
@@ -18,7 +33,13 @@ const GroundModel = {
     const isNum = !isNaN(identifier);
     const numId = isNum ? parseInt(identifier, 10) : -1;
     const [rows] = await pool.query(
-      'SELECT * FROM grounds WHERE UPPER(code) = UPPER(?) OR id = ? LIMIT 1',
+      `SELECT 
+        g.*, 
+        COALESCE(ci.file_url, g.image_url) AS image_url
+       FROM grounds g
+       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       WHERE UPPER(g.code) = UPPER(?) OR g.id = ? 
+       LIMIT 1`,
       [identifier, numId]
     );
     return rows[0] || null;

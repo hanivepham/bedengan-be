@@ -8,7 +8,7 @@ const { isEmpty, validateEnum, validateLength } = require('../utils/validator');
  */
 const formatGroundItem = (req, g) => {
   if (!g) return null;
-  const fullImageUrl = formatImageUrl(req, g.image_url);
+  const fullImageUrl = formatImageUrl(req, g.image_url || g.file_url);
   return {
     ...g,
     is_active: Boolean(g.is_active),
