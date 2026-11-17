@@ -59,6 +59,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/grounds', groundRoutes);
 app.use('/grounds', groundRoutes);
 app.use('/api/catalogs', catalogRoutes);
+app.use('/catalogs', catalogRoutes);
+app.use('/api/rentals', (req, res, next) => {
+  req.query.category = 'rental';
+  return catalogRoutes(req, res, next);
+});
+app.use('/rentals', (req, res, next) => {
+  req.query.category = 'rental';
+  return catalogRoutes(req, res, next);
+});
 app.use('/api/guides', guideRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/chat', aiRoutes);

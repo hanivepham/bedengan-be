@@ -5,7 +5,21 @@ const pool = require('../config/db');
  */
 const CatalogModel = {
   findAll: async ({ category, status, search }) => {
-    let sql = 'SELECT * FROM catalogs WHERE 1=1';
+    let sql = `
+      SELECT 
+        c.*,
+        ci.file_url,
+        COALESCE(ci.file_url, c.image_url) AS image_url,
+        COALESCE(ci.file_url, c.image_url) AS banner_url
+      FROM catalogs c
+      LEFT JOIN cloud_images ci ON ci.id = (
+        SELECT MAX(sub_ci.id)
+        FROM cloud_images sub_ci
+        WHERE sub_ci.entity_type IN ('catalog', 'rental', 'warung', 'photographer')
+          AND sub_ci.entity_id = c.id
+      )
+      WHERE 1=1
+    `;
     const params = [];
 
     if (category) {
@@ -14,30 +28,45 @@ const CatalogModel = {
       if (mappedCategory === 'kuliner') mappedCategory = 'warung';
 
       if (['rental', 'warung', 'photographer'].includes(mappedCategory)) {
-        sql += ' AND category = ?';
+        sql += ' AND c.category = ?';
         params.push(mappedCategory);
       }
     }
 
     if (status && status !== 'all') {
-      sql += ' AND status = ?';
+      sql += ' AND c.status = ?';
       params.push(status.toLowerCase());
     }
 
     if (search && search.trim()) {
       const term = `%${search.trim()}%`;
-      sql += ' AND (name LIKE ? OR description LIKE ? OR location_note LIKE ? OR tags LIKE ? OR applicant_name LIKE ?)';
+      sql += ' AND (c.name LIKE ? OR c.description LIKE ? OR c.location_note LIKE ? OR c.tags LIKE ? OR c.applicant_name LIKE ?)';
       params.push(term, term, term, term, term);
     }
 
-    sql += ' ORDER BY created_at DESC';
+    sql += ' ORDER BY c.created_at DESC';
 
     const [rows] = await pool.query(sql, params);
     return rows;
   },
 
   findById: async (id) => {
-    const [rows] = await pool.query('SELECT * FROM catalogs WHERE id = ?', [id]);
+    const [rows] = await pool.query(
+      `SELECT 
+        c.*,
+        ci.file_url,
+        COALESCE(ci.file_url, c.image_url) AS image_url,
+        COALESCE(ci.file_url, c.image_url) AS banner_url
+      FROM catalogs c
+      LEFT JOIN cloud_images ci ON ci.id = (
+        SELECT MAX(sub_ci.id)
+        FROM cloud_images sub_ci
+        WHERE sub_ci.entity_type IN ('catalog', 'rental', 'warung', 'photographer')
+          AND sub_ci.entity_id = c.id
+      )
+      WHERE c.id = ?`,
+      [id]
+    );
     return rows[0] || null;
   },
 

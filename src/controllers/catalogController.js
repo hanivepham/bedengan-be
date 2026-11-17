@@ -54,11 +54,14 @@ const serializeTags = (inputTags) => {
 const formatCatalogItem = (req, item) => {
   if (!item) return null;
   const tagsArray = parseTags(item.tags);
+  const rawImageUrl = item.banner_url || item.image_url || item.file_url;
+  const fullImageUrl = formatImageUrl(req, rawImageUrl);
   return {
     ...item,
     tags: tagsArray,
     tags_raw: item.tags || '',
-    image_url: formatImageUrl(req, item.image_url)
+    image_url: fullImageUrl,
+    banner_url: fullImageUrl
   };
 };
 
