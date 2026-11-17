@@ -1,16 +1,17 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const AdminModel = require('../models/AdminModel');
-const { successResponse, errorResponse } = require('../utils/responseHelper');
-const { isEmpty, validateEmail, validateLength } = require('../utils/validator');
+import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import AdminModel from '../models/AdminModel';
+import { successResponse, errorResponse } from '../utils/responseHelper';
+import { isEmpty, validateEmail, validateLength } from '../utils/validator';
 
 /**
  * Controller untuk Autentikasi Admin
  * Akses database sepenuhnya melalui Data Access Layer (AdminModel)
  */
-const authController = {
+export const authController = {
   // POST /api/auth/login
-  login: async (req, res) => {
+  login: async (req: Request, res: Response, next?: NextFunction) => {
     try {
       const { email, password } = req.body;
 
@@ -50,25 +51,25 @@ const authController = {
           created_at: admin.created_at
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Auth Error]', error);
       return errorResponse(res, 'Gagal memproses login.', 500, error.message);
     }
   },
 
   // GET /api/auth/me (Protected)
-  getMe: async (req, res) => {
+  getMe: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       return successResponse(res, 'Data profil admin berhasil diambil.', {
         admin: req.admin
       });
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal mengambil data profil.', 500, error.message);
     }
   },
 
   // PUT /api/auth/profile (Protected) - Update nama atau ganti password
-  updateProfile: async (req, res) => {
+  updateProfile: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const adminId = req.admin.id;
       const { name, current_password, new_password } = req.body;
@@ -117,11 +118,12 @@ const authController = {
           email: updatedAdmin.email
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Update Profile Error]', error);
       return errorResponse(res, 'Gagal memperbarui profil.', 500, error.message);
     }
   }
 };
 
-module.exports = authController;
+export default authController;
+

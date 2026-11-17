@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const groundController = require('../controllers/groundController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const { handleUpload } = require('../middlewares/uploadMiddleware');
+import { Router } from 'express';
+import groundController from '../controllers/groundController';
+import authMiddleware from '../middlewares/authMiddleware';
+import { handleUpload } from '../middlewares/uploadMiddleware';
+
+const router = Router();
 
 // Public routes
 router.get('/', groundController.getAllGrounds);
@@ -13,4 +14,5 @@ router.post('/', authMiddleware, handleUpload('image'), groundController.createG
 router.put('/:id', authMiddleware, handleUpload('image'), groundController.updateGround);
 router.delete('/:id', authMiddleware, groundController.deleteGround);
 
-module.exports = router;
+export default router;
+

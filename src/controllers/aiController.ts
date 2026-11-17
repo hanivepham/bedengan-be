@@ -1,13 +1,14 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { successResponse, errorResponse } = require('../utils/responseHelper');
+import { Request, Response, NextFunction } from 'express';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { successResponse, errorResponse } from '../utils/responseHelper';
 
 /**
  * Controller untuk Integrasi Chatbot Gemini AI Bedengan Xplore
  * Menjawab pertanyaan seputar Bumi Perkemahan Bedengan secara ramah dan informatif
  */
-const aiController = {
+export const aiController = {
   // POST /api/chat
-  chat: async (req, res) => {
+  chat: async (req: Request, res: Response, next?: NextFunction) => {
     try {
       const { message } = req.body;
 
@@ -26,9 +27,9 @@ const aiController = {
 
       // Utamakan gemini-1.5-flash sesuai instruksi, dengan auto-fallback ke model generasi baru jika versi sebelumnya telah deprecated/404
       const candidateModels = ['gemini-1.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
-      let replyText = null;
+      let replyText: string | null = null;
       let selectedModel = 'gemini-1.5-flash';
-      let lastError = null;
+      let lastError: any = null;
 
       for (const modelName of candidateModels) {
         try {
@@ -42,7 +43,7 @@ const aiController = {
           replyText = response.text();
           selectedModel = modelName;
           if (replyText) break;
-        } catch (err) {
+        } catch (err: any) {
           lastError = err;
           console.warn(`[AI Chat] Percobaan model '${modelName}' gagal (${err.message}). Mencoba model alternatif...`);
         }
@@ -57,11 +58,12 @@ const aiController = {
         response: replyText,
         source: selectedModel
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[AI Chat Error]', error);
       return errorResponse(res, 'Gagal memproses tanya AI.', 500, error.message);
     }
   }
 };
 
-module.exports = aiController;
+export default aiController;
+

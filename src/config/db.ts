@@ -1,9 +1,11 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
+import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
+
+dotenv.config();
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  port: parseInt(process.env.DB_PORT || '3306', 10) || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'db_bedengan',
@@ -14,4 +16,5 @@ const pool = mysql.createPool({
   keepAliveInitialDelay: 0
 });
 
-module.exports = pool;
+export default pool;
+

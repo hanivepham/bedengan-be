@@ -1,10 +1,12 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
+import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
+import bcrypt from 'bcryptjs';
+
+dotenv.config();
 
 const runSeed = async () => {
   const dbHost = process.env.DB_HOST || 'localhost';
-  const dbPort = parseInt(process.env.DB_PORT, 10) || 3306;
+  const dbPort = parseInt(process.env.DB_PORT || '3306', 10) || 3306;
   const dbUser = process.env.DB_USER || 'root';
   const dbPassword = process.env.DB_PASSWORD || '';
   const dbName = process.env.DB_NAME || 'db_bedengan';
@@ -12,7 +14,7 @@ const runSeed = async () => {
   console.log('----------------------------------------------------');
   console.log(`[SEED] Menghubungkan ke MySQL di ${dbHost}:${dbPort}...`);
 
-  let rootConn;
+  let rootConn: any;
   try {
     rootConn = await mysql.createConnection({
       host: dbHost,
@@ -675,3 +677,5 @@ const runSeed = async () => {
 };
 
 runSeed();
+
+export default runSeed;

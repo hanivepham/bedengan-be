@@ -4,9 +4,10 @@
   "description": "REST API Backend untuk Ekosistem Bedengan Xplore (Flutter Mobile & Next.js Admin)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node src/config/seed.js"
+    "start": "node -r ts-node/register server.js",
+    "dev": "ts-node-dev --respawn --transpile-only server.js",
+    "build": "tsc",
+    "seed": "ts-node src/config/seed.ts"
   },
   "keywords": [
     "express",
@@ -28,7 +29,15 @@
     "mysql2": "^3.12.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^26.6.6",
     "jimp": "^0.22.12",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
   }
 }

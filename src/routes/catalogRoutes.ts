@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const catalogController = require('../controllers/catalogController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const { handleUpload } = require('../middlewares/uploadMiddleware');
+import { Router } from 'express';
+import catalogController from '../controllers/catalogController';
+import authMiddleware from '../middlewares/authMiddleware';
+import { handleUpload } from '../middlewares/uploadMiddleware';
+
+const router = Router();
 
 // Public routes
 router.get('/', catalogController.getAllCatalogs);
@@ -16,4 +17,5 @@ router.post('/', authMiddleware, handleUpload('image'), catalogController.create
 router.put('/:id', authMiddleware, handleUpload('image'), catalogController.updateCatalog);
 router.delete('/:id', authMiddleware, catalogController.deleteCatalog);
 
-module.exports = router;
+export default router;
+

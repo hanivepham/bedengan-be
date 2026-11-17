@@ -1,6 +1,8 @@
 require('dotenv').config();
-const app = require('./src/app');
-const pool = require('./src/config/db');
+const appModule = require('./src/app');
+const app = appModule.default || appModule;
+const dbModule = require('./src/config/db');
+const pool = dbModule.default || dbModule;
 
 const PORT = process.env.PORT || 5000;
 

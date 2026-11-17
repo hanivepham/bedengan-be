@@ -1,12 +1,13 @@
-const GroundModel = require('../models/GroundModel');
-const ConfigModel = require('../models/ConfigModel');
-const { successResponse, errorResponse, formatImageUrl } = require('../utils/responseHelper');
-const { isEmpty, validateEnum, validateLength } = require('../utils/validator');
+import { Request, Response, NextFunction } from 'express';
+import GroundModel from '../models/GroundModel';
+import ConfigModel from '../models/ConfigModel';
+import { successResponse, errorResponse, formatImageUrl } from '../utils/responseHelper';
+import { isEmpty, validateEnum, validateLength } from '../utils/validator';
 
 /**
  * Helper: Format output ground item
  */
-const formatGroundItem = (req, g) => {
+const formatGroundItem = (req: Request | any, g: any) => {
   if (!g) return null;
   const fullImageUrl = formatImageUrl(req, g.image_url || g.file_url);
   return {
@@ -26,9 +27,9 @@ const formatGroundItem = (req, g) => {
  * Controller untuk Manajemen Zona Perkemahan (Grounds A-M)
  * Menggunakan GroundModel dan ConfigModel (DAL)
  */
-const groundController = {
+export const groundController = {
   // GET /api/grounds (Public)
-  getAllGrounds: async (req, res) => {
+  getAllGrounds: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const configs = await ConfigModel.getByKeys([
         'overall_ground_map_url',
@@ -37,7 +38,7 @@ const groundController = {
       ]);
 
       const grounds = await GroundModel.findAll();
-      const formattedGrounds = grounds.map((g) => formatGroundItem(req, g));
+      const formattedGrounds = grounds.map((g: any) => formatGroundItem(req, g));
 
       return successResponse(res, 'Daftar seluruh zona ground berhasil diambil.', {
         overall_ground_map_url: formatImageUrl(req, configs.overall_ground_map_url || '/uploads/maps/bedengan_map.png'),
@@ -47,14 +48,14 @@ const groundController = {
         },
         grounds: formattedGrounds
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Grounds Error]', error);
       return errorResponse(res, 'Gagal mengambil data zona perkemahan.', 500, error.message);
     }
   },
 
   // GET /api/grounds/:code (Public)
-  getGroundDetail: async (req, res) => {
+  getGroundDetail: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { code } = req.params;
 
@@ -64,13 +65,13 @@ const groundController = {
       }
 
       return successResponse(res, 'Detail ground berhasil diambil.', formatGroundItem(req, g));
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal mengambil detail ground.', 500, error.message);
     }
   },
 
   // POST /api/grounds (Protected + Multer)
-  createGround: async (req, res) => {
+  createGround: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const {
         code,
@@ -147,14 +148,14 @@ const groundController = {
         formatGroundItem(req, newGround),
         201
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Create Ground Error]', error);
       return errorResponse(res, 'Gagal menambahkan ground baru.', 500, error.message);
     }
   },
 
   // PUT /api/grounds/:id (Protected + Multer)
-  updateGround: async (req, res) => {
+  updateGround: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -233,14 +234,14 @@ const groundController = {
       });
 
       return successResponse(res, 'Data zona perkemahan berhasil diperbarui.', formatGroundItem(req, updatedGround));
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Update Ground Error]', error);
       return errorResponse(res, 'Gagal memperbarui ground.', 500, error.message);
     }
   },
 
   // DELETE /api/grounds/:id (Protected)
-  deleteGround: async (req, res) => {
+  deleteGround: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -252,10 +253,11 @@ const groundController = {
       await GroundModel.delete(id);
 
       return successResponse(res, `Ground '${oldGround.name}' (${oldGround.code}) berhasil dihapus.`);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menghapus ground.', 500, error.message);
     }
   }
 };
 
-module.exports = groundController;
+export default groundController;
+

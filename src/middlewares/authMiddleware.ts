@@ -1,12 +1,13 @@
-const jwt = require('jsonwebtoken');
-const AdminModel = require('../models/AdminModel');
-const { errorResponse } = require('../utils/responseHelper');
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import AdminModel from '../models/AdminModel';
+import { errorResponse } from '../utils/responseHelper';
 
 /**
  * Middleware untuk verifikasi token JWT admin
  * Menggunakan AdminModel (DAL) tanpa query SQL langsung
  */
-const authMiddleware = async (req, res, next) => {
+export const authMiddleware = async (req: Request | any, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,7 +20,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const jwtSecret = process.env.JWT_SECRET || 'bedengan_xplore_secret_key_2026';
-    let decoded;
+    let decoded: any;
 
     try {
       decoded = jwt.verify(token, jwtSecret);
@@ -35,9 +36,10 @@ const authMiddleware = async (req, res, next) => {
 
     req.admin = admin;
     next();
-  } catch (error) {
+  } catch (error: any) {
     return errorResponse(res, 'Terjadi kesalahan pada verifikasi autentikasi.', 500, error.message);
   }
 };
 
-module.exports = authMiddleware;
+export default authMiddleware;
+

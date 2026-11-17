@@ -1,25 +1,26 @@
-const ConfigModel = require('../models/ConfigModel');
-const GroundModel = require('../models/GroundModel');
-const CatalogModel = require('../models/CatalogModel');
-const ReviewModel = require('../models/ReviewModel');
-const { successResponse, errorResponse, formatImageUrl } = require('../utils/responseHelper');
-const { isEmpty, validateLength } = require('../utils/validator');
+import { Request, Response, NextFunction } from 'express';
+import ConfigModel from '../models/ConfigModel';
+import GroundModel from '../models/GroundModel';
+import CatalogModel from '../models/CatalogModel';
+import ReviewModel from '../models/ReviewModel';
+import { successResponse, errorResponse, formatImageUrl } from '../utils/responseHelper';
+import { isEmpty, validateLength } from '../utils/validator';
 
 /**
  * Controller untuk Halaman Beranda, Dashboard Statistik, Ulasan Pengunjung, & Pengaturan Situs
  * Akses database melalui Data Access Layer (ConfigModel, GroundModel, CatalogModel, ReviewModel)
  */
-const homeController = {
+export const homeController = {
   // GET /api/home (Public)
-  getHomeData: async (req, res) => {
+  getHomeData: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       // 1. Ambil site_configs
       const rawConfigs = await ConfigModel.getAll();
-      const configs = {};
+      const configs: Record<string, any> = {};
       Object.entries(rawConfigs).forEach(([key, val]) => {
         let formattedVal = val;
         if (key.includes('map_url') || key.includes('image')) {
-          formattedVal = formatImageUrl(req, val);
+          formattedVal = formatImageUrl(req, val as string);
         }
         configs[key] = formattedVal;
       });
@@ -55,14 +56,14 @@ const homeController = {
         reviews,
         configs
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Home Error]', error);
       return errorResponse(res, 'Gagal mengambil data beranda.', 500, error.message);
     }
   },
 
   // GET /api/home/dashboard (Protected - data lengkap untuk Next.js Admin Panel)
-  getDashboardStats: async (req, res) => {
+  getDashboardStats: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const totalGrounds = await GroundModel.countAll();
       const totalRentals = await CatalogModel.countByCategoryAndStatus('rental', 'approved');
@@ -81,13 +82,13 @@ const homeController = {
         pending_registrations: pendingRows,
         recent_activities: recentActivities
       });
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal mengambil data dashboard.', 500, error.message);
     }
   },
 
   // POST /api/home/reviews (Public/Admin)
-  createReview: async (req, res) => {
+  createReview: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { visitor_name, rating, comment, visit_date } = req.body;
 
@@ -111,13 +112,13 @@ const homeController = {
       });
 
       return successResponse(res, 'Terima kasih! Ulasan Anda berhasil dikirimkan.', newReview, 201);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menambahkan ulasan.', 500, error.message);
     }
   },
 
   // DELETE /api/home/reviews/:id (Protected)
-  deleteReview: async (req, res) => {
+  deleteReview: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -129,13 +130,13 @@ const homeController = {
       await ReviewModel.delete(id);
 
       return successResponse(res, 'Ulasan berhasil dihapus.');
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menghapus ulasan.', 500, error.message);
     }
   },
 
   // PUT /api/home/configs (Protected)
-  updateConfigs: async (req, res) => {
+  updateConfigs: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const updates = req.body;
 
@@ -145,24 +146,24 @@ const homeController = {
 
       const updatedConfigs = await ConfigModel.upsertMany(updates);
 
-      const formattedConfigs = {};
+      const formattedConfigs: Record<string, any> = {};
       Object.entries(updatedConfigs).forEach(([key, val]) => {
         let formattedVal = val;
         if (key.includes('map_url') || key.includes('image')) {
-          formattedVal = formatImageUrl(req, val);
+          formattedVal = formatImageUrl(req, val as string);
         }
         formattedConfigs[key] = formattedVal;
       });
 
       return successResponse(res, 'Konfigurasi situs berhasil diperbarui.', formattedConfigs);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Config Error]', error);
       return errorResponse(res, 'Gagal memperbarui konfigurasi.', 500, error.message);
     }
   },
 
   // POST /api/home/configs/upload-map (Protected + Multer)
-  uploadMapImage: async (req, res) => {
+  uploadMapImage: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       if (!req.file) {
         return errorResponse(res, 'File gambar peta wajib diunggah!', 400);
@@ -179,10 +180,11 @@ const homeController = {
         relative_path: relativePath,
         full_url: formatImageUrl(req, relativePath)
       });
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal mengunggah gambar peta.', 500, error.message);
     }
   }
 };
 
-module.exports = homeController;
+export default homeController;
+

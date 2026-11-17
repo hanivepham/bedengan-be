@@ -1,15 +1,16 @@
-const GuideModel = require('../models/GuideModel');
-const ConfigModel = require('../models/ConfigModel');
-const { successResponse, errorResponse, formatImageUrl } = require('../utils/responseHelper');
-const { isEmpty, validatePhone, validateEnum, validateLength } = require('../utils/validator');
+import { Request, Response, NextFunction } from 'express';
+import GuideModel from '../models/GuideModel';
+import ConfigModel from '../models/ConfigModel';
+import { successResponse, errorResponse, formatImageUrl } from '../utils/responseHelper';
+import { isEmpty, validatePhone, validateEnum, validateLength } from '../utils/validator';
 
 /**
  * Controller untuk Panduan Berkemah, Aturan, Peringatan, Etika, dan Kontak Darurat
  * Menggunakan GuideModel dan ConfigModel (DAL)
  */
-const guideController = {
+export const guideController = {
   // GET /api/guides (Public)
-  getGuidesData: async (req, res) => {
+  getGuidesData: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const configs = await ConfigModel.getByKeys([
         'evacuation_map_url',
@@ -19,9 +20,9 @@ const guideController = {
 
       const allRules = await GuideModel.findAllRules();
 
-      const rules = allRules.filter((r) => r.type === 'rule');
-      const warnings = allRules.filter((r) => r.type === 'warning');
-      const etiquette = allRules.filter((r) => r.type === 'etiquette');
+      const rules = allRules.filter((r: any) => r.type === 'rule');
+      const warnings = allRules.filter((r: any) => r.type === 'warning');
+      const etiquette = allRules.filter((r: any) => r.type === 'etiquette');
 
       const emergencyContacts = await GuideModel.findAllContacts();
 
@@ -36,14 +37,14 @@ const guideController = {
         etiquette,
         emergency_contacts: emergencyContacts
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Guide Error]', error);
       return errorResponse(res, 'Gagal mengambil data panduan.', 500, error.message);
     }
   },
 
   // --- CRUD RULES & WARNINGS ---
-  createRule: async (req, res) => {
+  createRule: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { type, title, description, icon_name, display_order } = req.body;
 
@@ -68,12 +69,12 @@ const guideController = {
       });
 
       return successResponse(res, 'Aturan/panduan berhasil ditambahkan.', newRule, 201);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menambahkan aturan.', 500, error.message);
     }
   },
 
-  updateRule: async (req, res) => {
+  updateRule: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -110,12 +111,12 @@ const guideController = {
       });
 
       return successResponse(res, 'Aturan/panduan berhasil diperbarui.', updated);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal memperbarui aturan.', 500, error.message);
     }
   },
 
-  deleteRule: async (req, res) => {
+  deleteRule: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -127,13 +128,13 @@ const guideController = {
       await GuideModel.deleteRule(id);
 
       return successResponse(res, `Aturan '${existing.title}' berhasil dihapus.`);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menghapus aturan.', 500, error.message);
     }
   },
 
   // --- CRUD EMERGENCY CONTACTS ---
-  createContact: async (req, res) => {
+  createContact: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { title, phone_number, location_detail, icon_name } = req.body;
 
@@ -161,12 +162,12 @@ const guideController = {
       });
 
       return successResponse(res, 'Kontak darurat berhasil ditambahkan.', newContact, 201);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menambahkan kontak darurat.', 500, error.message);
     }
   },
 
-  updateContact: async (req, res) => {
+  updateContact: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -204,12 +205,12 @@ const guideController = {
       });
 
       return successResponse(res, 'Kontak darurat berhasil diperbarui.', updated);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal memperbarui kontak darurat.', 500, error.message);
     }
   },
 
-  deleteContact: async (req, res) => {
+  deleteContact: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -221,10 +222,11 @@ const guideController = {
       await GuideModel.deleteContact(id);
 
       return successResponse(res, `Kontak '${existing.title}' berhasil dihapus.`);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menghapus kontak darurat.', 500, error.message);
     }
   }
 };
 
-module.exports = guideController;
+export default guideController;
+

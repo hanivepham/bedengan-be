@@ -1,18 +1,19 @@
-const CatalogModel = require('../models/CatalogModel');
-const { successResponse, errorResponse, formatImageUrl } = require('../utils/responseHelper');
-const {
+import { Request, Response, NextFunction } from 'express';
+import CatalogModel from '../models/CatalogModel';
+import { successResponse, errorResponse, formatImageUrl } from '../utils/responseHelper';
+import {
   isEmpty,
   validatePhone,
   validateOperatingHours,
   validateEnum,
   validateLength
-} = require('../utils/validator');
+} from '../utils/validator';
 
 /**
  * Helper: Parse data tags dari database menjadi Array string[]
  * Mendukung format string berpemisah koma ("Kopi, Teh"), JSON string ('["Kopi"]'), maupun Array
  */
-const parseTags = (rawTags) => {
+const parseTags = (rawTags: any): string[] => {
   if (rawTags === null || rawTags === undefined) return [];
   if (Array.isArray(rawTags)) {
     return rawTags.map((t) => String(t).trim()).filter(Boolean);
@@ -41,7 +42,7 @@ const parseTags = (rawTags) => {
 /**
  * Helper: Standarisasi data tags untuk disimpan ke kolom VARCHAR(255) di database
  */
-const serializeTags = (inputTags) => {
+const serializeTags = (inputTags: any): string | null => {
   if (inputTags === null || inputTags === undefined) return null;
   const parsed = parseTags(inputTags);
   if (parsed.length === 0) return null;
@@ -51,7 +52,7 @@ const serializeTags = (inputTags) => {
 /**
  * Helper: Format output catalog item dengan tags array & absolute image_url
  */
-const formatCatalogItem = (req, item) => {
+const formatCatalogItem = (req: Request | any, item: any) => {
   if (!item) return null;
   const tagsArray = parseTags(item.tags);
   const rawImageUrl = item.banner_url || item.image_url || item.file_url;
@@ -68,7 +69,7 @@ const formatCatalogItem = (req, item) => {
 /**
  * Helper: Ekstrak field body dengan dukungan snake_case dan camelCase (Frontend kompatibilitas)
  */
-const extractCatalogPayload = (req) => {
+const extractCatalogPayload = (req: Request | any) => {
   const b = req.body || {};
 
   // Kategori: petakan juga alias 'fotografer' -> 'photographer', 'kuliner' -> 'warung'
@@ -117,25 +118,25 @@ const extractCatalogPayload = (req) => {
  * Controller untuk Katalog Layanan & Fasilitas Bedengan Xplore
  * Kategori: rental, warung, photographer
  */
-const catalogController = {
+export const catalogController = {
   // GET /api/catalogs (Public)
-  getAllCatalogs: async (req, res) => {
+  getAllCatalogs: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { category, search, status } = req.query;
 
       const rows = await CatalogModel.findAll({ category, search, status });
 
-      const catalogs = rows.map((item) => formatCatalogItem(req, item));
+      const catalogs = rows.map((item: any) => formatCatalogItem(req, item));
 
       return successResponse(res, 'Data katalog berhasil diambil.', catalogs);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Catalogs Error]', error);
       return errorResponse(res, 'Gagal mengambil data katalog.', 500, error.message);
     }
   },
 
   // GET /api/catalogs/:id (Public)
-  getCatalogDetail: async (req, res) => {
+  getCatalogDetail: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -145,13 +146,13 @@ const catalogController = {
       }
 
       return successResponse(res, 'Detail item katalog berhasil diambil.', formatCatalogItem(req, item));
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal mengambil detail item katalog.', 500, error.message);
     }
   },
 
   // POST /api/catalogs (Protected + Multer 'image' atau Public untuk pengajuan baru)
-  createCatalog: async (req, res) => {
+  createCatalog: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const payload = extractCatalogPayload(req);
 
@@ -254,14 +255,14 @@ const catalogController = {
         formatCatalogItem(req, newItem),
         201
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Create Catalog Error]', error);
       return errorResponse(res, 'Gagal menambahkan item katalog.', 500, error.message);
     }
   },
 
   // PUT /api/catalogs/:id (Protected + Multer 'image')
-  updateCatalog: async (req, res) => {
+  updateCatalog: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -362,14 +363,14 @@ const catalogController = {
       });
 
       return successResponse(res, 'Item katalog berhasil diperbarui.', formatCatalogItem(req, updatedItem));
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Update Catalog Error]', error);
       return errorResponse(res, 'Gagal memperbarui item katalog.', 500, error.message);
     }
   },
 
   // DELETE /api/catalogs/:id (Protected)
-  deleteCatalog: async (req, res) => {
+  deleteCatalog: async (req: Request | any, res: Response, next?: NextFunction) => {
     try {
       const { id } = req.params;
 
@@ -381,10 +382,11 @@ const catalogController = {
       await CatalogModel.delete(id);
 
       return successResponse(res, `Item katalog '${item.name}' berhasil dihapus.`);
-    } catch (error) {
+    } catch (error: any) {
       return errorResponse(res, 'Gagal menghapus item katalog.', 500, error.message);
     }
   }
 };
 
-module.exports = catalogController;
+export default catalogController;
+

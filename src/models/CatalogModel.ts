@@ -1,10 +1,10 @@
-const pool = require('../config/db');
+import pool from '../config/db';
 
 /**
  * Data Access Layer (DAL) untuk Tabel catalogs
  */
-const CatalogModel = {
-  findAll: async ({ category, status, search }) => {
+export const CatalogModel = {
+  findAll: async ({ category, status, search }: { category?: string; status?: string; search?: string } = {}) => {
     let sql = `
       SELECT 
         c.*,
@@ -20,7 +20,7 @@ const CatalogModel = {
       )
       WHERE 1=1
     `;
-    const params = [];
+    const params: any[] = [];
 
     if (category) {
       let mappedCategory = category.toLowerCase();
@@ -46,14 +46,14 @@ const CatalogModel = {
 
     sql += ' ORDER BY c.created_at DESC';
 
-    const [rows] = await pool.query(sql, params);
+    const [rows]: any = await pool.query(sql, params);
     return rows;
   },
 
-  findById: async (id) => {
-    const [rows] = await pool.query(
+  findById: async (id: number | string) => {
+    const [rows]: any = await pool.query(
       `SELECT 
-        c.*,
+        c.*, 
         ci.file_url,
         COALESCE(ci.file_url, c.image_url) AS image_url,
         COALESCE(ci.file_url, c.image_url) AS banner_url
@@ -70,8 +70,8 @@ const CatalogModel = {
     return rows[0] || null;
   },
 
-  create: async (data) => {
-    const [result] = await pool.query(
+  create: async (data: any) => {
+    const [result]: any = await pool.query(
       `INSERT INTO catalogs (
         category, name, price_text, description, location_note,
         contact_phone, operating_hours, image_url, status, applicant_name, social_handle, tags
@@ -95,7 +95,7 @@ const CatalogModel = {
     return CatalogModel.findById(result.insertId);
   },
 
-  update: async (id, data) => {
+  update: async (id: number | string, data: any) => {
     await pool.query(
       `UPDATE catalogs SET
         category = ?, name = ?, price_text = ?, description = ?,
@@ -122,13 +122,13 @@ const CatalogModel = {
     return CatalogModel.findById(id);
   },
 
-  delete: async (id) => {
-    const [result] = await pool.query('DELETE FROM catalogs WHERE id = ?', [id]);
+  delete: async (id: number | string) => {
+    const [result]: any = await pool.query('DELETE FROM catalogs WHERE id = ?', [id]);
     return result.affectedRows > 0;
   },
 
-  countByCategoryAndStatus: async (category, status = 'approved') => {
-    const [rows] = await pool.query(
+  countByCategoryAndStatus: async (category: string, status: string = 'approved') => {
+    const [rows]: any = await pool.query(
       'SELECT COUNT(*) as count FROM catalogs WHERE category = ? AND status = ?',
       [category, status]
     );
@@ -136,14 +136,14 @@ const CatalogModel = {
   },
 
   countPending: async () => {
-    const [rows] = await pool.query(
+    const [rows]: any = await pool.query(
       "SELECT COUNT(*) as count FROM catalogs WHERE status = 'pending'"
     );
     return rows[0].count;
   },
 
-  findPending: async (limit = 10) => {
-    const [rows] = await pool.query(
+  findPending: async (limit: number = 10) => {
+    const [rows]: any = await pool.query(
       `SELECT id, name, category, applicant_name, created_at, status
        FROM catalogs
        WHERE status = 'pending'
@@ -154,8 +154,8 @@ const CatalogModel = {
     return rows;
   },
 
-  findRecentActivities: async (limit = 5) => {
-    const [rows] = await pool.query(
+  findRecentActivities: async (limit: number = 5) => {
+    const [rows]: any = await pool.query(
       'SELECT id, name, category, created_at as timestamp FROM catalogs ORDER BY created_at DESC LIMIT ?',
       [limit]
     );
@@ -163,4 +163,5 @@ const CatalogModel = {
   }
 };
 
-module.exports = CatalogModel;
+export default CatalogModel;
+

@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const homeController = require('../controllers/homeController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const { handleUpload } = require('../middlewares/uploadMiddleware');
+import { Router } from 'express';
+import homeController from '../controllers/homeController';
+import authMiddleware from '../middlewares/authMiddleware';
+import { handleUpload } from '../middlewares/uploadMiddleware';
+
+const router = Router();
 
 // Public routes
 router.get('/', homeController.getHomeData);
@@ -14,4 +15,5 @@ router.delete('/reviews/:id', authMiddleware, homeController.deleteReview);
 router.put('/configs', authMiddleware, homeController.updateConfigs);
 router.post('/configs/upload-map', authMiddleware, handleUpload('map_image'), homeController.uploadMapImage);
 
-module.exports = router;
+export default router;
+

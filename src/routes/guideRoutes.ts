@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const guideController = require('../controllers/guideController');
-const authMiddleware = require('../middlewares/authMiddleware');
+import { Router } from 'express';
+import guideController from '../controllers/guideController';
+import authMiddleware from '../middlewares/authMiddleware';
+
+const router = Router();
 
 // Public route
 router.get('/', guideController.getGuidesData);
@@ -16,4 +17,5 @@ router.post('/contacts', authMiddleware, guideController.createContact);
 router.put('/contacts/:id', authMiddleware, guideController.updateContact);
 router.delete('/contacts/:id', authMiddleware, guideController.deleteContact);
 
-module.exports = router;
+export default router;
+

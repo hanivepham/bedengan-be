@@ -1,11 +1,11 @@
-const pool = require('../config/db');
+import pool from '../config/db';
 
 /**
  * Data Access Layer (DAL) untuk Tabel grounds
  */
-const GroundModel = {
+export const GroundModel = {
   findAll: async () => {
-    const [rows] = await pool.query(
+    const [rows]: any = await pool.query(
       `SELECT 
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
@@ -16,8 +16,8 @@ const GroundModel = {
     return rows;
   },
 
-  findById: async (id) => {
-    const [rows] = await pool.query(
+  findById: async (id: number | string) => {
+    const [rows]: any = await pool.query(
       `SELECT 
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
@@ -29,10 +29,10 @@ const GroundModel = {
     return rows[0] || null;
   },
 
-  findByCodeOrId: async (identifier) => {
-    const isNum = !isNaN(identifier);
-    const numId = isNum ? parseInt(identifier, 10) : -1;
-    const [rows] = await pool.query(
+  findByCodeOrId: async (identifier: string | number) => {
+    const isNum = !isNaN(Number(identifier));
+    const numId = isNum ? parseInt(String(identifier), 10) : -1;
+    const [rows]: any = await pool.query(
       `SELECT 
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
@@ -45,24 +45,24 @@ const GroundModel = {
     return rows[0] || null;
   },
 
-  findByCode: async (code) => {
-    const [rows] = await pool.query(
+  findByCode: async (code: string) => {
+    const [rows]: any = await pool.query(
       'SELECT id FROM grounds WHERE UPPER(code) = UPPER(?)',
       [String(code).trim()]
     );
     return rows[0] || null;
   },
 
-  findConflictCode: async (code, excludeId) => {
-    const [rows] = await pool.query(
+  findConflictCode: async (code: string, excludeId: number | string) => {
+    const [rows]: any = await pool.query(
       'SELECT id FROM grounds WHERE code = ? AND id != ?',
       [String(code).trim().toUpperCase(), excludeId]
     );
     return rows[0] || null;
   },
 
-  create: async (data) => {
-    const [result] = await pool.query(
+  create: async (data: any) => {
+    const [result]: any = await pool.query(
       `INSERT INTO grounds (
         code, name, capacity_badge, description, area_size, terrain_feature,
         nearby_facility, toilet_distance, highlight_text, highlight_theme, image_url, is_active
@@ -86,7 +86,7 @@ const GroundModel = {
     return GroundModel.findById(result.insertId);
   },
 
-  update: async (id, data) => {
+  update: async (id: number | string, data: any) => {
     await pool.query(
       `UPDATE grounds SET
         code = ?, name = ?, capacity_badge = ?, description = ?, area_size = ?,
@@ -113,20 +113,21 @@ const GroundModel = {
     return GroundModel.findById(id);
   },
 
-  delete: async (id) => {
-    const [result] = await pool.query('DELETE FROM grounds WHERE id = ?', [id]);
+  delete: async (id: number | string) => {
+    const [result]: any = await pool.query('DELETE FROM grounds WHERE id = ?', [id]);
     return result.affectedRows > 0;
   },
 
   countActive: async () => {
-    const [rows] = await pool.query('SELECT COUNT(*) as count FROM grounds WHERE is_active = TRUE');
+    const [rows]: any = await pool.query('SELECT COUNT(*) as count FROM grounds WHERE is_active = TRUE');
     return rows[0].count;
   },
 
   countAll: async () => {
-    const [rows] = await pool.query('SELECT COUNT(*) as count FROM grounds');
+    const [rows]: any = await pool.query('SELECT COUNT(*) as count FROM grounds');
     return rows[0].count;
   }
 };
 
-module.exports = GroundModel;
+export default GroundModel;
+

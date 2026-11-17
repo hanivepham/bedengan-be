@@ -1,15 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const path = require('path');
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import path from 'path';
 
 // Import rute-rute
-const authRoutes = require('./routes/authRoutes');
-const groundRoutes = require('./routes/groundRoutes');
-const catalogRoutes = require('./routes/catalogRoutes');
-const guideRoutes = require('./routes/guideRoutes');
-const homeRoutes = require('./routes/homeRoutes');
-const aiRoutes = require('./routes/aiRoutes');
+import authRoutes from './routes/authRoutes';
+import groundRoutes from './routes/groundRoutes';
+import catalogRoutes from './routes/catalogRoutes';
+import guideRoutes from './routes/guideRoutes';
+import homeRoutes from './routes/homeRoutes';
+import aiRoutes from './routes/aiRoutes';
 
 const app = express();
 
@@ -37,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health Check & Root Info
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'success',
     message: 'Selamat datang di REST API Resmi Bedengan Xplore!',
@@ -60,11 +60,11 @@ app.use('/api/grounds', groundRoutes);
 app.use('/grounds', groundRoutes);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/catalogs', catalogRoutes);
-app.use('/api/rentals', (req, res, next) => {
+app.use('/api/rentals', (req: Request | any, res: Response, next: NextFunction) => {
   req.query.category = 'rental';
   return catalogRoutes(req, res, next);
 });
-app.use('/rentals', (req, res, next) => {
+app.use('/rentals', (req: Request | any, res: Response, next: NextFunction) => {
   req.query.category = 'rental';
   return catalogRoutes(req, res, next);
 });
@@ -74,7 +74,7 @@ app.use('/api/chat', aiRoutes);
 app.use('/api/ai', aiRoutes);
 
 // 404 Handler untuk route yang tidak ditemukan
-app.use((req, res) => {
+app.use((req: Request, res: Response) => {
   res.status(404).json({
     status: 'error',
     message: `Rute '${req.method} ${req.originalUrl}' tidak ditemukan pada server API Bedengan Xplore.`
@@ -82,7 +82,7 @@ app.use((req, res) => {
 });
 
 // Global Error Handler
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('[Unhandled Error]', err);
 
   const statusCode = err.statusCode || 500;
@@ -95,4 +95,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-module.exports = app;
+export default app;
+

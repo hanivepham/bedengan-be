@@ -2,13 +2,13 @@
  * Helper Validasi Input untuk API Bedengan Xplore
  */
 
-const isEmpty = (value) => {
+export const isEmpty = (value: any): boolean => {
   if (value === undefined || value === null) return true;
   if (typeof value === 'string' && value.trim() === '') return true;
   return false;
 };
 
-const validateEmail = (email) => {
+export const validateEmail = (email: any) => {
   if (isEmpty(email)) {
     return { isValid: false, error: 'Email wajib diisi!' };
   }
@@ -19,7 +19,7 @@ const validateEmail = (email) => {
   return { isValid: true, sanitized: String(email).trim().toLowerCase() };
 };
 
-const validatePhone = (phone, options = {}) => {
+export const validatePhone = (phone: any, options: { allowLandline?: boolean; fieldName?: string } = {}) => {
   const { allowLandline = false, fieldName = 'Nomor telepon' } = options;
 
   if (isEmpty(phone)) {
@@ -66,7 +66,7 @@ const validatePhone = (phone, options = {}) => {
   return { isValid: true, normalized };
 };
 
-const validateOperatingHours = (hoursStr) => {
+export const validateOperatingHours = (hoursStr: any) => {
   if (isEmpty(hoursStr)) {
     return { isValid: false, error: 'Jam operasional wajib diisi!' };
   }
@@ -104,7 +104,7 @@ const validateOperatingHours = (hoursStr) => {
   return { isValid: true, formatted };
 };
 
-const validateEnum = (value, allowedValues, fieldName = 'Field') => {
+export const validateEnum = (value: any, allowedValues: string[], fieldName: string = 'Field') => {
   if (isEmpty(value)) {
     return { isValid: false, error: `${fieldName} wajib diisi!` };
   }
@@ -118,7 +118,7 @@ const validateEnum = (value, allowedValues, fieldName = 'Field') => {
   return { isValid: true, value: valLower };
 };
 
-const validateLength = (value, max, fieldName = 'Field') => {
+export const validateLength = (value: any, max: number, fieldName: string = 'Field') => {
   if (value && String(value).length > max) {
     return {
       isValid: false,
@@ -128,7 +128,7 @@ const validateLength = (value, max, fieldName = 'Field') => {
   return { isValid: true };
 };
 
-module.exports = {
+export default {
   isEmpty,
   validateEmail,
   validatePhone,
@@ -136,3 +136,4 @@ module.exports = {
   validateEnum,
   validateLength
 };
+
