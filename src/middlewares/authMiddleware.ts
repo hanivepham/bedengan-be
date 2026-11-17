@@ -1,13 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import AdminModel from '../models/AdminModel';
 import { errorResponse } from '../utils/responseHelper';
+import { AuthRequest } from '../types';
 
 /**
  * Middleware untuk verifikasi token JWT admin
  * Menggunakan AdminModel (DAL) tanpa query SQL langsung
  */
-export const authMiddleware = async (req: Request | any, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -42,4 +43,3 @@ export const authMiddleware = async (req: Request | any, res: Response, next: Ne
 };
 
 export default authMiddleware;
-
