@@ -26,7 +26,8 @@ export const aiService = {
 
     const systemInstruction = 'Kamu adalah Asisten Ramah Bumi Perkemahan Bedengan (Bedengan Xplore), Selorejo, Dau, Malang. Tugasmu adalah melayani dan menjawab pertanyaan pengunjung seputar kegiatan berkemah (camping), fasilitas, zona ground (Ground A hingga M), sewa alat/tenda, tiket masuk, keindahan alam, serta kontak darurat dengan ramah, hangat, sopan, dan informatif dalam Bahasa Indonesia.';
 
-    const candidateModels = ['gemini-1.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest'];
+    const preferredModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const candidateModels = Array.from(new Set([preferredModel, 'gemini-1.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest']));
     let replyText: string | null = null;
     let selectedModel: string = candidateModels[0];
     let lastError: any = null;

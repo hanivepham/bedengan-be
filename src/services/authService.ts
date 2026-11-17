@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import AdminModel from '../models/AdminModel';
 import { isEmpty, validateEmail, validateLength } from '../utils/validator';
 import { LoginDTO, UpdateProfileDTO } from '../types';
+
+dotenv.config();
 
 export class AuthServiceError extends Error {
   statusCode: number;
@@ -36,7 +39,8 @@ export const authService = {
       throw new AuthServiceError('Kredensial tidak valid. Password salah.', 401);
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'bedengan_xplore_secret_key_2026';
+    const jwtSecret = process.env.JWT_SECRET || 'secret';
+    const jwtExpiresIn = (process.env.JWT_EXPIRES_IN || '7d') as any;
     const token = jwt.sign(
       {
         id: admin.id,
@@ -44,7 +48,7 @@ export const authService = {
         name: admin.name
       },
       jwtSecret,
-      { expiresIn: '7d' }
+      { expiresIn: jwtExpiresIn }
     );
 
     return {

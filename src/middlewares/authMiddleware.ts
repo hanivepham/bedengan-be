@@ -20,7 +20,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return errorResponse(res, 'Akses ditolak. Format token tidak valid.', 401);
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'bedengan_xplore_secret_key_2026';
+    const jwtSecret = process.env.JWT_SECRET || 'secret';
     let decoded: any;
 
     try {

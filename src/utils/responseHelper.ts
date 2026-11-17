@@ -38,7 +38,8 @@ export const formatImageUrl = (req: Request | any, imagePath: string | null) => 
   }
 
   const protocol = req.protocol || 'http';
-  const host = req.get ? req.get('host') : (req.headers ? req.headers.host : 'localhost:5000');
+  const defaultPort = process.env.PORT || '5000';
+  const host = req.get ? req.get('host') : (req.headers ? req.headers.host : `localhost:${defaultPort}`);
   const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 
   return `${protocol}://${host}${cleanPath}`;

@@ -1,7 +1,21 @@
+import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+
+dotenv.config();
+
+// Konfigurasi Kredensial Cloudinary dari Environment Variables (.env)
+export const cloudinaryConfig = {
+  cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  apiKey: process.env.CLOUDINARY_API_KEY || '',
+  apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+  cloudinaryUrl: process.env.CLOUDINARY_URL || ''
+};
+
+const MAX_UPLOAD_SIZE = parseInt(process.env.MAX_FILE_SIZE || String(5 * 1024 * 1024), 10) || 5 * 1024 * 1024;
+const BASE_UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads';
 
 // Fungsi pembantu untuk menentukan folder penyimpanan
 const getDestination = (req: Request | any, file: any, cb: (error: Error | null, destination: string) => void) => {
@@ -15,7 +29,7 @@ const getDestination = (req: Request | any, file: any, cb: (error: Error | null,
     subfolder = 'grounds';
   }
 
-  const uploadPath = path.join(__dirname, '..', '..', 'uploads', subfolder);
+  const uploadPath = path.join(__dirname, '..', '..', BASE_UPLOAD_DIR, subfolder);
 
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
@@ -56,7 +70,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5 MB
+    fileSize: MAX_UPLOAD_SIZE
   },
   fileFilter
 });
@@ -90,6 +104,7 @@ export const handleUpload = (fieldName: string) => {
 };
 
 export default {
+  cloudinaryConfig,
   upload,
   handleUpload
 };

@@ -146,12 +146,15 @@ const runSeed = async () => {
 
     // --- SEED ADMIN DEFAULT ---
     console.log('[SEED] Mengisi Akun Admin Default...');
-    const adminPasswordHash = await bcrypt.hash('password123', 10);
+    const defaultAdminName = process.env.ADMIN_DEFAULT_NAME || 'Admin Bedengan';
+    const defaultAdminEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin@bedengan.com';
+    const defaultAdminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'admin_default_secret';
+    const adminPasswordHash = await bcrypt.hash(defaultAdminPassword, 10);
     await conn.query(
       `INSERT INTO admins (name, email, password_hash)
        VALUES (?, ?, ?)
        ON DUPLICATE KEY UPDATE name = VALUES(name), password_hash = VALUES(password_hash)`,
-      ['Admin Bedengan', 'admin@bedengan.com', adminPasswordHash]
+      [defaultAdminName, defaultAdminEmail, adminPasswordHash]
     );
 
     // --- SEED 13 ZONA GROUND (A - M) ---
@@ -666,7 +669,7 @@ const runSeed = async () => {
 
     console.log('----------------------------------------------------');
     console.log('[SEED SUKSES] Database dan data awal berhasil diinisialisasi 100%!');
-    console.log('Admin Default: admin@bedengan.com / password123');
+    console.log(`Admin Default: ${defaultAdminEmail}`);
     console.log('----------------------------------------------------');
   } catch (err) {
     console.error('[SEED ERROR]', err);

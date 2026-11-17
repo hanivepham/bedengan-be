@@ -1,7 +1,10 @@
+import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+
+dotenv.config();
 
 // Import rute-rute
 import authRoutes from './routes/authRoutes';
@@ -12,6 +15,8 @@ import homeRoutes from './routes/homeRoutes';
 import aiRoutes from './routes/aiRoutes';
 
 const app = express();
+const PORT = parseInt(process.env.PORT || '5000', 10) || 5000;
+app.set('port', PORT);
 
 // Keamanan dan Headers
 app.use(
@@ -23,7 +28,7 @@ app.use(
 // CORS
 app.use(
   cors({
-    origin: '*',
+    origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   })
@@ -34,7 +39,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Folder Statis untuk Uploads (Gambar Grounds, Catalogs, Maps)
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+app.use('/uploads', express.static(path.join(__dirname, '..', uploadDir)));
 
 // Health Check & Root Info
 app.get('/', (req: Request, res: Response) => {
