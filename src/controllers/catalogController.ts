@@ -43,7 +43,8 @@ export const catalogController = {
     try {
       const payload = extractCatalogPayload(req);
       const isAdmin = Boolean(req.admin);
-      const newItem = await catalogService.createCatalog(req, payload, req.file, isAdmin);
+      const files = req.files || (req.file ? { image: [req.file] } : undefined);
+      const newItem = await catalogService.createCatalog(req, payload, files, isAdmin);
 
       const message = isAdmin
         ? 'Data katalog berhasil ditambahkan.'
@@ -62,7 +63,8 @@ export const catalogController = {
     try {
       const id = req.params.id as string;
       const payload = extractCatalogPayload(req);
-      const updated = await catalogService.updateCatalog(req, id, payload, req.file);
+      const files = req.files || (req.file ? { image: [req.file] } : undefined);
+      const updated = await catalogService.updateCatalog(req, id, payload, files);
 
       return successResponse(res, 'Data katalog berhasil diperbarui.', updated);
     } catch (error: any) {

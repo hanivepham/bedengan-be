@@ -93,6 +93,7 @@ const runSeed = async () => {
         applicant_name VARCHAR(100) DEFAULT NULL,
         social_handle VARCHAR(100) DEFAULT NULL,
         tags VARCHAR(255) DEFAULT NULL,
+        items JSON NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);

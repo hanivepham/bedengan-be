@@ -72,8 +72,8 @@ export const CatalogModel = {
     const [result]: any = await pool.query(
       `INSERT INTO catalogs (
         category, name, price_text, description, location_note,
-        contact_phone, operating_hours, image_url, status, applicant_name, social_handle, tags
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        contact_phone, operating_hours, image_url, status, applicant_name, social_handle, tags, items
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         data.category,
         data.name,
@@ -86,7 +86,8 @@ export const CatalogModel = {
         data.status || 'approved',
         data.applicant_name || null,
         data.social_handle || null,
-        data.tags || null
+        data.tags || null,
+        data.items !== undefined ? (typeof data.items === 'string' ? data.items : JSON.stringify(data.items)) : null
       ]
     );
 
@@ -98,7 +99,7 @@ export const CatalogModel = {
       `UPDATE catalogs SET
         category = ?, name = ?, price_text = ?, description = ?,
         location_note = ?, contact_phone = ?, operating_hours = ?,
-        image_url = ?, status = ?, applicant_name = ?, social_handle = ?, tags = ?
+        image_url = ?, status = ?, applicant_name = ?, social_handle = ?, tags = ?, items = ?
       WHERE id = ?`,
       [
         data.category,
@@ -113,6 +114,7 @@ export const CatalogModel = {
         data.applicant_name,
         data.social_handle,
         data.tags,
+        data.items !== undefined ? (typeof data.items === 'string' ? data.items : JSON.stringify(data.items)) : null,
         id
       ]
     );

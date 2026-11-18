@@ -103,9 +103,37 @@ export const handleUpload = (fieldName: string) => {
   };
 };
 
+// Middleware wrapper untuk menangani upload multiple fields (misal 'image' dan 'item_images')
+export const handleUploadFields = (fields: multer.Field[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const uploadFields = upload.fields(fields);
+    uploadFields(req, res, (err: any) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            status: 'error',
+            message: 'Ukuran file terlalu besar! Maksimal ukuran file adalah 5MB.'
+          });
+        }
+        return res.status(400).json({
+          status: 'error',
+          message: `Kesalahan unggah file: ${err.message}`
+        });
+      } else if (err) {
+        return res.status(400).json({
+          status: 'error',
+          message: err.message
+        });
+      }
+      next();
+    });
+  };
+};
+
 export default {
   cloudinaryConfig,
   upload,
-  handleUpload
+  handleUpload,
+  handleUploadFields
 };
 

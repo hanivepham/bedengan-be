@@ -104,6 +104,14 @@ export interface UpdateGroundDTO {
 }
 
 /**
+ * Sub-entity: Item Peralatan Rental / Menu Warung
+ */
+export interface CatalogItemEntity {
+  name: string;
+  image_url: string | null;
+}
+
+/**
  * Entity: Catalog
  */
 export interface CatalogEntity {
@@ -123,6 +131,7 @@ export interface CatalogEntity {
   social_handle?: string | null;
   tags?: string[] | string | null;
   tags_raw?: string;
+  items?: CatalogItemEntity[];
   created_at?: string | Date;
   updated_at?: string | Date;
 }
@@ -163,6 +172,7 @@ export interface CreateCatalogDTO {
   instagramUsername?: string;
   instagram?: string;
   tags?: any;
+  items?: any;
 }
 
 /**
