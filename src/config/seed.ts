@@ -142,7 +142,24 @@ const runSeed = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
 
-    console.log('[SEED] Seluruh 7 tabel berhasil diverifikasi/dibuat.');
+    // 8. Tabel Cloud Images (Explicit Foreign Keys)
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS cloud_images (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        file_key VARCHAR(255) NOT NULL,
+        file_url TEXT NOT NULL,
+        catalog_id INT DEFAULT NULL,
+        ground_id INT DEFAULT NULL,
+        uploader_id INT DEFAULT NULL,
+        file_size INT DEFAULT NULL,
+        mime_type VARCHAR(50) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_cloud_images_catalogs FOREIGN KEY (catalog_id) REFERENCES catalogs(id) ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT fk_cloud_images_grounds FOREIGN KEY (ground_id) REFERENCES grounds(id) ON DELETE CASCADE ON UPDATE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    console.log('[SEED] Seluruh 8 tabel berhasil diverifikasi/dibuat.');
 
     // --- SEED ADMIN DEFAULT ---
     console.log('[SEED] Mengisi Akun Admin Default...');
@@ -360,6 +377,38 @@ const runSeed = async () => {
           g.image_url,
           g.description
         ]
+      );
+    }
+
+    // --- SEED CLOUD IMAGES UNTUK GROUNDS (CLOUDINARY DENGAN EXPLICIT FOREIGN KEY ground_id) ---
+    console.log('[SEED] Mengisi data Cloud Images (Cloudinary) dengan Explicit Foreign Key ground_id...');
+    const groundCloudImages = [
+      { id: 1, ground_id: 1, file_key: 'bedengan/grounds/k1uedhmputmntmt5edju', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881815/bedengan/grounds/k1uedhmputmntmt5edju.jpg', file_size: 408928 },
+      { id: 2, ground_id: 2, file_key: 'bedengan/grounds/gorn9qgv1dacc8myyi7i', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881836/bedengan/grounds/gorn9qgv1dacc8myyi7i.jpg', file_size: 355028 },
+      { id: 3, ground_id: 3, file_key: 'bedengan/grounds/dew3wehbavvsr3nmiddh', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881854/bedengan/grounds/dew3wehbavvsr3nmiddh.jpg', file_size: 348831 },
+      { id: 4, ground_id: 4, file_key: 'bedengan/grounds/typmvlt8fz3pj6tw7avn', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881869/bedengan/grounds/typmvlt8fz3pj6tw7avn.jpg', file_size: 381060 },
+      { id: 5, ground_id: 5, file_key: 'bedengan/grounds/k6m8lcwbjlwfzj1pnhib', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881886/bedengan/grounds/k6m8lcwbjlwfzj1pnhib.jpg', file_size: 385442 },
+      { id: 6, ground_id: 6, file_key: 'bedengan/grounds/hleoo17rps9l0uahtnqf', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881902/bedengan/grounds/hleoo17rps9l0uahtnqf.jpg', file_size: 393978 },
+      { id: 7, ground_id: 7, file_key: 'bedengan/grounds/utqngd9oqv1hbykbnunm', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881916/bedengan/grounds/utqngd9oqv1hbykbnunm.jpg', file_size: 379777 },
+      { id: 8, ground_id: 8, file_key: 'bedengan/grounds/xsslpkcyyjal4q1qrfpv', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881933/bedengan/grounds/xsslpkcyyjal4q1qrfpv.jpg', file_size: 371628 },
+      { id: 9, ground_id: 9, file_key: 'bedengan/grounds/ruoszerzjnnigrwxzxpv', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881949/bedengan/grounds/ruoszerzjnnigrwxzxpv.jpg', file_size: 377725 },
+      { id: 10, ground_id: 10, file_key: 'bedengan/grounds/tpif3bf3pllwycsunjp4', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881964/bedengan/grounds/tpif3bf3pllwycsunjp4.jpg', file_size: 398754 },
+      { id: 11, ground_id: 11, file_key: 'bedengan/grounds/drwsvbmj3aqfnpncpou9', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881980/bedengan/grounds/drwsvbmj3aqfnpncpou9.jpg', file_size: 356631 },
+      { id: 12, ground_id: 12, file_key: 'bedengan/grounds/o1sz7z2n4lld7xkmygwt', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794881996/bedengan/grounds/o1sz7z2n4lld7xkmygwt.jpg', file_size: 380671 },
+      { id: 13, ground_id: 13, file_key: 'bedengan/grounds/mvwjywqdravfk3wdmqwj', file_url: 'https://res.cloudinary.com/iwa6xewr/image/upload/v1794882010/bedengan/grounds/mvwjywqdravfk3wdmqwj.jpg', file_size: 407166 }
+    ];
+
+    for (const img of groundCloudImages) {
+      await conn.query(
+        `INSERT INTO cloud_images (id, ground_id, catalog_id, file_key, file_url, uploader_id, file_size, mime_type)
+         VALUES (?, ?, NULL, ?, ?, 1, ?, 'image/jpeg')
+         ON DUPLICATE KEY UPDATE
+           ground_id = VALUES(ground_id),
+           catalog_id = VALUES(catalog_id),
+           file_key = VALUES(file_key),
+           file_url = VALUES(file_url),
+           file_size = VALUES(file_size)`,
+        [img.id, img.ground_id, img.file_key, img.file_url, img.file_size]
       );
     }
 

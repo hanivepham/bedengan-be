@@ -15,8 +15,7 @@ export const CatalogModel = {
       LEFT JOIN cloud_images ci ON ci.id = (
         SELECT MAX(sub_ci.id)
         FROM cloud_images sub_ci
-        WHERE sub_ci.entity_type IN ('catalog', 'rental', 'warung', 'photographer')
-          AND sub_ci.entity_id = c.id
+        WHERE sub_ci.catalog_id = c.id
       )
       WHERE 1=1
     `;
@@ -61,8 +60,7 @@ export const CatalogModel = {
       LEFT JOIN cloud_images ci ON ci.id = (
         SELECT MAX(sub_ci.id)
         FROM cloud_images sub_ci
-        WHERE sub_ci.entity_type IN ('catalog', 'rental', 'warung', 'photographer')
-          AND sub_ci.entity_id = c.id
+        WHERE sub_ci.catalog_id = c.id
       )
       WHERE c.id = ?`,
       [id]

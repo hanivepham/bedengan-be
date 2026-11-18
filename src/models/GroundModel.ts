@@ -10,7 +10,7 @@ export const GroundModel = {
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
        FROM grounds g
-       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       LEFT JOIN cloud_images ci ON ci.ground_id = g.id
        ORDER BY g.code ASC`
     );
     return rows;
@@ -22,7 +22,7 @@ export const GroundModel = {
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
        FROM grounds g
-       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       LEFT JOIN cloud_images ci ON ci.ground_id = g.id
        WHERE g.id = ?`,
       [id]
     );
@@ -37,7 +37,7 @@ export const GroundModel = {
         g.*, 
         COALESCE(ci.file_url, g.image_url) AS image_url
        FROM grounds g
-       LEFT JOIN cloud_images ci ON ci.entity_type = 'ground' AND ci.entity_id = g.id
+       LEFT JOIN cloud_images ci ON ci.ground_id = g.id
        WHERE UPPER(g.code) = UPPER(?) OR g.id = ? 
        LIMIT 1`,
       [identifier, numId]
